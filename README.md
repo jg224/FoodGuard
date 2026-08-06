@@ -92,7 +92,7 @@ CombatNoRestEnabled = true     # #5 (combat without the Rested buff)
 [Sound]
 CombatSoundEnabled = true      # sound is reserved for the combat case only
 CombatSoundCooldown = 60       # seconds between repeated combat alert sounds
-AlertSfxName = sfx_alert       # vanilla SFX prefab name (resolved via ZNetScene)
+AlertSfxName = sfx_perfectblock  # vanilla SFX prefab name (resolved via ZNetScene)
 
 [Cooldowns]
 LeaveBaseCooldown = 8
@@ -144,8 +144,9 @@ All three are rebindable (`MarkBaseHotkey`, `DebugHotkey`, `SfxDumpHotkey`); set
   but does nothing (no local player there).
 - **Combat detection** = a creature is currently targeting *you*. It uses a brief 5s clear-window so
   the signal doesn't flicker off during retargeting.
-- **The alert sound** is resolved from Valheim's prefab table by name (`sfx_alert` by default). If
-  that prefab is missing or has no audio clip, the sound is skipped silently — the popup still shows.
-  Change `AlertSfxName` to any other networked SFX prefab (e.g. `sfx_guard_alert`) if you prefer.
+- **The alert sound** is resolved from Valheim's prefab table by name (`sfx_perfectblock` by default —
+  the sharp metallic perfect-block ring). If that prefab is missing or has no audio clip, the sound is
+  skipped silently — the popup still shows. Change `AlertSfxName` to any other networked SFX prefab
+  (press F9 to list them); see the Sound section of the config for the full list of options.
 - **No bundled game DLLs.** The build references the game/BepInEx DLLs already on the machine
   (`Private=false`), matching the project's other custom mods.

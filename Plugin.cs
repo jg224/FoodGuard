@@ -60,7 +60,6 @@ namespace FoodGuard
         internal static ConfigEntry<float> LoginGraceSeconds;      // suppress reminders for N s after login/spawn
         internal static ConfigEntry<KeyCode> DebugHotkey;          // press to dump live state to screen
         internal static ConfigEntry<KeyCode> SfxDumpHotkey;        // press to dump all sfx_* prefab names to log
-        internal static ConfigEntry<KeyCode> SfxAuditionHotkey;    // press to cycle+play candidate alert sounds
 
         // ---- Base zone ----
         internal static ConfigEntry<string> BaseZoneMode;          // Marked | CraftingStation | Building | Both
@@ -153,13 +152,6 @@ namespace FoodGuard
                 "sound -- any name in the dump is guaranteed to work. Names go to the log only (not the " +
                 "screen, since there are hundreds). Set to KeyCode.None to disable.");
 
-            SfxAuditionHotkey = Config.Bind("General", "SfxAuditionHotkey", KeyCode.F10,
-                "Audition alert sounds by ear. The FIRST press plays your currently-configured AlertSfxName " +
-                "(so it doubles as a 'test my setting' key); each press after that plays the next candidate " +
-                "from a curated list and shows its name + the top picks on screen. When you hear one you " +
-                "like, set AlertSfxName to it. Press F9 to dump every sound name to the log. Set to " +
-                "KeyCode.None to disable.");
-
             BaseZoneMode = Config.Bind("Base", "BaseZoneMode", "Marked",
                 "What counts as 'base' for the quiet zone and the leave-base trigger. " +
                 "Marked (default, recommended) = a single location YOU mark with the MarkBaseHotkey. " +
@@ -225,10 +217,11 @@ namespace FoodGuard
                 "Minimum seconds between repeated combat alert sounds while the condition persists. " +
                 "Prevents an audio loop if you stay in combat with low food.");
 
-            AlertSfxName = Config.Bind("Sound", "AlertSfxName", "sfx_alert",
+            AlertSfxName = Config.Bind("Sound", "AlertSfxName", "sfx_perfectblock",
                 "Valheim prefab name of the alert sound effect. Resolved via ZNetScene.GetPrefab. " +
-                "Must be a networked prefab that contains an AudioSource. If it can't be found, the " +
-                "sound is skipped silently (the popup still shows).");
+                "Must be a networked prefab that contains an AudioSource. Default sfx_perfectblock = the " +
+                "sharp metallic perfect-block ring. If it can't be found, the sound is skipped silently " +
+                "(the popup still shows). Press F9 to dump every valid sound name to the log.");
 
             LeaveBaseCooldown = Config.Bind("Cooldowns", "LeaveBaseCooldown", 30f,
                 "Seconds between repeated leave-base popups (the trigger also rearms on re-enter).");
@@ -315,9 +308,6 @@ namespace FoodGuard
         private static bool _debugKeyDown;
         // SFX-dump hotkey latch.
         private static bool _sfxDumpKeyDown;
-        // SFX-audition hotkey latch + cycle index.
-        private static bool _sfxAuditionKeyDown;
-        private static int _sfxAuditionIndex;
         // Mark-base hotkey latch.
         private static bool _markKeyDown;
 
@@ -378,22 +368,6 @@ namespace FoodGuard
                 else if (!sDown)
                 {
                     _sfxDumpKeyDown = false;
-                }
-            }
-
-            // SFX audition hotkey: each press plays the next candidate alert sound and shows its name,
-            // so the user can pick one by ear instead of editing the config + restarting.
-            if (SfxAuditionHotkey.Value != KeyCode.None)
-            {
-                bool aDown = Input.GetKeyDown(SfxAuditionHotkey.Value);
-                if (aDown && !_sfxAuditionKeyDown)
-                {
-                    _sfxAuditionKeyDown = true;
-                    AuditionNextSfx(local);
-                }
-                else if (!aDown)
-                {
-                    _sfxAuditionKeyDown = false;
                 }
             }
 
@@ -510,73 +484,6 @@ namespace FoodGuard
             string mode = (BaseZoneMode.Value ?? "").Trim();
             if (mode != "Marked") return false;
             return string.IsNullOrWhiteSpace(MarkedBaseCenter.Value);
-        }
-
-        // Curated list of candidate alert sounds for the F10 audition hotkey. Drawn from the F9 dump of
-        // this game version -- all confirmed to exist. Ordered roughly most-promising-first. The user
-        // cycles these one press at a time, hears each, and picks by ear. The FIRST F10 press plays the
-        // currently-configured AlertSfxName (so it doubles as a "test my setting" key); presses after
-        // that cycle this list.
-        private static readonly string[] AuditionCandidates =
-        {
-            "sfx_fader_bell",            // bell toll -- clean "attention" cue (top pick)
-            "sfx_secretfound",           // discovery chime -- bright, positive (top pick)
-            "sfx_perfectblock",          // sharp metallic ring (top pick)
-            "sfx_cooking_station_done",  // food-themed, softer (top pick)
-            "sfx_HiveQueen_alerted",     // sharp insectoid buzz -- creature "noticed you" cue
-            "sfx_tick_alerted",          // skittering chirp -- creature "noticed you" cue
-            "sfx_perfect_dodge",         // sharp combat cue
-            "sfx_FireAddFuel",           // fire whoosh
-            "sfx_prespawn_fader",        // dramatic boss-spawn cue
-            "sfx_Bonemass_alert",        // boss roar (loud/alarming)
-            "sfx_gdking_scream",         // elder boss scream (very loud)
-        };
-
-        /// <summary>
-        ///   F10 handler. First press plays the currently-configured AlertSfxName (so it works as a
-        ///   "test my current setting" key). Each subsequent press plays the next candidate from the
-        ///   curated list, wraps around at the end. Shows the playing sound at the top of the popup,
-        ///   the top-suggestion names below it, and a one-line F9 hint at the bottom.
-        /// </summary>
-        private static void AuditionNextSfx(Player local)
-        {
-            if (AuditionCandidates.Length == 0) return;
-
-            // Index 0 (before any press) = play the currently-configured sound. After that, cycle the list.
-            string name;
-            bool isCurrent;
-            if (_sfxAuditionIndex == 0)
-            {
-                name = Plugin.AlertSfxName.Value;
-                isCurrent = true;
-            }
-            else
-            {
-                name = AuditionCandidates[(_sfxAuditionIndex - 1) % AuditionCandidates.Length];
-                isCurrent = false;
-            }
-            _sfxAuditionIndex++;
-
-            bool played = ReminderEngine.PlaySfxByName(name, local);
-
-            // Build a multi-line popup: playing line, top suggestions, F9 hint.
-            var sb = new System.Text.StringBuilder();
-            if (played)
-            {
-                sb.Append("[FoodGuard] Playing: ").Append(name);
-                if (isCurrent) sb.Append("  (your current AlertSfxName)");
-            }
-            else
-            {
-                sb.Append("[FoodGuard] Couldn't play '").Append(name).Append("' (not found).");
-            }
-            sb.Append("\nTop picks: fader_bell, secretfound, perfectblock, cooking_station_done");
-            sb.Append("\nAlso try: HiveQueen_alerted, tick_alerted  |  F9 dumps ALL sounds to log");
-
-            string status = sb.ToString();
-            Plugin.Log.LogInfo(status.Replace("\n", " | "));
-            try { MessageHud.instance?.ShowMessage(MessageHud.MessageType.Center, status); }
-            catch { /* non-fatal */ }
         }
 
         /// <summary>
