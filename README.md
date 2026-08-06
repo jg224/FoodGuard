@@ -3,38 +3,6 @@
 A client-side Valheim mod that reminds you to eat. Built for players who forget to eat food & rest,
 when leaving base or going into combat.
 
-**Author:** jg224 · **Version:** 0.1.0 (pre-release — under active testing)
-
-## Publish to Thunderstore
-
-The repo includes a `publish.ps1` that builds the complete Thunderstore package (DLL + manifest +
-README + LICENSE + 256×256 icon.png, all at the zip root with no nested folder — exactly what
-Thunderstore requires).
-
-```powershell
-# Build the package (regenerates the icon, builds the DLL, zips everything)
-powershell -ExecutionPolicy Bypass -File foodguard\publish.ps1
-# Override the version:
-powershell -ExecutionPolicy Bypass -File foodguard\publish.ps1 -Version 0.2.0
-```
-
-Output: `foodguard\dist\FoodGuard-<version>.zip`.
-
-To upload (requires the Thunderstore CLI `tcli`, already on this machine):
-
-```powershell
-tcli login                                          # one-time; creates an auth token
-tcli publish --file "foodguard\dist\FoodGuard-0.1.0.zip" `
-    --package-namespace jg224 --package-name foodguard --package-version 0.1.0
-```
-
-Notes:
-- The icon is auto-generated (`make_icon.ps1`). To use custom art, drop a hand-made `icon.png`
-  (exactly 256×256) into `foodguard/` and re-run `publish.ps1` (it overwrites).
-- `manifest.json` lists `denikson-BepInExPack_Valheim-5.4.2333` as a dependency — matches the
-  BepInEx version on the server (5.4.23.3).
-- Thunderstore enforces unique version numbers per package; bump `-Version` on every publish.
-
 ## What it does
 
 Four reminders, each a large center-screen popup (the same banner Valheim uses for "World saved").

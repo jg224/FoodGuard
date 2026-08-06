@@ -45,7 +45,7 @@ namespace FoodGuard
     {
         public const string PluginGuid = "jg224.FoodGuard";
         public const string PluginName = "FoodGuard";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.1.1";
 
         internal static ManualLogSource Log;
 

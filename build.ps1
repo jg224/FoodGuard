@@ -14,7 +14,7 @@ param(
     [string]$OutputDir = "C:\Users\User\Downloads\New folder (2)",
     [string]$ModName   = "FoodGuard",
     [string]$Author    = "jg224",
-    [string]$Version   = "0.1.0"
+    [string]$Version   = "0.1.1"
 )
 
 $ErrorActionPreference = 'Stop'
