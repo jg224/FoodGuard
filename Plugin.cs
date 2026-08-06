@@ -183,22 +183,22 @@ namespace FoodGuard
                 "is suppressed at home.");
 
             LeaveBaseEnabled = Config.Bind("Triggers", "LeaveBaseEnabled", true,
-                "#1: Remind once when you leave base while needing food. Fires once per base-exit and " +
+                "Remind once when you leave base while needing food. Fires once per base-exit and " +
                 "rearms when you re-enter base.");
 
             LowFoodEnabled = Config.Bind("Triggers", "LowFoodEnabled", true,
-                "#2: Remind when any food is at/under FoodThresholdPercent remaining. Suppressed in base " +
+                "Remind when any food is at/under FoodThresholdPercent remaining. Suppressed in base " +
                 "if SuppressLowFoodInBase is true.");
 
             CombatEnabled = Config.Bind("Triggers", "CombatEnabled", true,
-                "#3: Remind (and play the alert sound) when you are in combat AND food is at/under the " +
+                "Remind (and play the alert sound) when you are in combat AND food is at/under the " +
                 "threshold. Never suppressed by base.");
 
             NoFoodOutEnabled = Config.Bind("Triggers", "NoFoodOutEnabled", true,
-                "#4: Remind when you have NO food eaten at all and you are away from base.");
+                "Remind when you have NO food eaten at all and you are away from base.");
 
             CombatNoRestEnabled = Config.Bind("Triggers", "CombatNoRestEnabled", true,
-                "#5: Remind (and play the alert sound) when you are in combat AND do not have the Rested " +
+                "Remind (and play the alert sound) when you are in combat AND do not have the Rested " +
                 "buff. Going into combat without Rested means no health/stamina regen bonus. Never " +
                 "suppressed by base, death/teleport/eat grace still apply.");
 
@@ -215,22 +215,22 @@ namespace FoodGuard
                 "Must be a networked prefab that contains an AudioSource. If it can't be found, the " +
                 "sound is skipped silently (the popup still shows).");
 
-            LeaveBaseCooldown = Config.Bind("Cooldowns", "LeaveBaseCooldown", 8f,
+            LeaveBaseCooldown = Config.Bind("Cooldowns", "LeaveBaseCooldown", 30f,
                 "Seconds between repeated leave-base popups (the trigger also rearms on re-enter).");
 
             LowFoodCooldown = Config.Bind("Cooldowns", "LowFoodCooldown", 30f,
                 "Seconds between repeated plain low-food popups.");
 
-            CombatCooldown = Config.Bind("Cooldowns", "CombatCooldown", 60f,
+            CombatCooldown = Config.Bind("Cooldowns", "CombatCooldown", 30f,
                 "Seconds between repeated combat popups (sound uses CombatSoundCooldown separately).");
 
             NoFoodOutCooldown = Config.Bind("Cooldowns", "NoFoodOutCooldown", 45f,
                 "Seconds between repeated 'no food at all' popups while out of base.");
 
-            CombatNoRestCooldown = Config.Bind("Cooldowns", "CombatNoRestCooldown", 60f,
+            CombatNoRestCooldown = Config.Bind("Cooldowns", "CombatNoRestCooldown", 30f,
                 "Seconds between repeated combat-no-rest popups (sound uses the shared CombatSoundCooldown).");
 
-            PopupSpacingSeconds = Config.Bind("Cooldowns", "PopupSpacingSeconds", 5f,
+            PopupSpacingSeconds = Config.Bind("Cooldowns", "PopupSpacingSeconds", 10f,
                 "MINIMUM seconds between ANY two popups, across all triggers. Center-screen banners " +
                 "overwrite each other instantly, so without this, two triggers firing a few tenths of " +
                 "a second apart (e.g. right after a teleport) would stack and you'd only see the last. " +
@@ -238,23 +238,23 @@ namespace FoodGuard
 
             LeaveBaseMessage = Config.Bind("Messages", "LeaveBaseMessage",
                 "You left base without food -- EAT NOW before you head out!",
-                "#1 popup text. Plain text; no substitution tokens.");
+                "Popup text. Plain text; no substitution tokens.");
 
             LowFoodMessage = Config.Bind("Messages", "LowFoodMessage",
                 "Food at {pct}% -- time to eat!",
-                "#2 popup text. '{pct}' is replaced with the lowest remaining-food percentage (integer).");
+                "Popup text. '{pct}' is replaced with the lowest remaining-food percentage (integer).");
 
             CombatMessage = Config.Bind("Messages", "CombatMessage",
                 "COMBAT with low food -- EAT NOW!",
-                "#3 popup text. Shown alongside the alert sound.");
+                "Popup text. Shown alongside the alert sound.");
 
             NoFoodOutMessage = Config.Bind("Messages", "NoFoodOutMessage",
                 "You have no food eaten and you're away from base -- EAT!",
-                "#4 popup text.");
+                "Popup text.");
 
             CombatNoRestMessage = Config.Bind("Messages", "CombatNoRestMessage",
                 "COMBAT without Rested -- get to a fire/shelter first!",
-                "#5 popup text. Shown alongside the alert sound (same channel as combat+low-food).");
+                "Popup text. Shown alongside the alert sound (same channel as combat+low-food).");
 
             Log.LogInfo($"{PluginName} v{PluginVersion} loaded. BaseZoneMode={BaseZoneMode.Value}, " +
                         $"Threshold={FoodThresholdPercent.Value}%, CombatSound={CombatSoundEnabled.Value}.");
