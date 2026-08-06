@@ -72,6 +72,7 @@ namespace FoodGuard
         internal static ConfigEntry<bool> LeaveBaseEnabled;
         internal static ConfigEntry<bool> LowFoodEnabled;
         internal static ConfigEntry<bool> CombatEnabled;
+        internal static ConfigEntry<int> CombatMinEmptySlots;   // #3 needs this many empty slots to fire
         internal static ConfigEntry<bool> NoFoodOutEnabled;
         internal static ConfigEntry<bool> CombatNoRestEnabled;   // #5: in combat AND not Rested
 
@@ -185,8 +186,13 @@ namespace FoodGuard
                 "if SuppressLowFoodInBase is true.");
 
             CombatEnabled = Config.Bind("Triggers", "CombatEnabled", true,
-                "Remind (and play the alert sound) when you are in combat AND food is at/under the " +
-                "threshold. Never suppressed by base.");
+                "Remind (and play the alert sound) when you are in combat AND have at least " +
+                "CombatMinEmptySlots empty food slots. Never suppressed by base.");
+
+            CombatMinEmptySlots = Config.Bind("Triggers", "CombatMinEmptySlots", 2,
+                "Number of EMPTY food slots (of 3) required for the combat+food trigger (#3) to fire. " +
+                "Default 2 = only nag when 2+ slots are empty (i.e. you have 1 or 0 foods eaten). " +
+                "Set 1 to nag when any slot is empty, 3 to nag only when you have no food at all.");
 
             NoFoodOutEnabled = Config.Bind("Triggers", "NoFoodOutEnabled", true,
                 "Remind when you have NO food eaten at all and you are away from base.");
@@ -240,7 +246,7 @@ namespace FoodGuard
                 "Popup text. '{pct}' is replaced with the lowest remaining-food percentage (integer).");
 
             CombatMessage = Config.Bind("Messages", "CombatMessage",
-                "COMBAT with low food -- EAT NOW!",
+                "COMBAT with too few foods eaten -- EAT NOW!",
                 "Popup text. Shown alongside the alert sound.");
 
             NoFoodOutMessage = Config.Bind("Messages", "NoFoodOutMessage",

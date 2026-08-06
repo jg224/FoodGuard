@@ -57,6 +57,7 @@ namespace FoodGuard
         private static int _needsFoodStreak;
         private static int _noFoodStreak;
         private static int _notRestedStreak;
+        private static int _combatEmptySlotsStreak;   // for trigger #3's empty-slots condition
 
         // Cached SFX prefab lookup (resolved lazily, re-resolved if missing in case the scene loaded late).
         private static GameObject _alertSfxPrefab;
@@ -87,9 +88,16 @@ namespace FoodGuard
             _notRestedStreak = !isRested ? _notRestedStreak + 1 : 0;
             bool notRestedConfirmed = _notRestedStreak >= NeedsFoodConfirmPolls;
 
+            // Combat-food condition: empty slots >= CombatMinEmptySlots. Tracked with its own 2-poll
+            // streak so a transient read (mid-teleport a slot flickers null) can't trip the trigger.
+            bool combatEmptySlots = food.EmptyFoodSlots >= Plugin.CombatMinEmptySlots.Value;
+            _combatEmptySlotsStreak = combatEmptySlots ? _combatEmptySlotsStreak + 1 : 0;
+            bool combatEmptySlotsConfirmed = _combatEmptySlotsStreak >= NeedsFoodConfirmPolls;
+
             Plugin.Debug($"tick: needsFood={food.NeedsFood}(streak={_needsFoodStreak}) " +
                          $"noFood={food.HasNoFood}(streak={_noFoodStreak}) " +
-                         $"active={food.ActiveFoodCount} lowest={food.LowestRemainingPct}% " +
+                         $"active={food.ActiveFoodCount} empty={food.EmptyFoodSlots} lowest={food.LowestRemainingPct}% " +
+                         $"combatEmpty={combatEmptySlots}(streak={_combatEmptySlotsStreak}) " +
                          $"rested={isRested}(notRestedStreak={_notRestedStreak}) " +
                          $"inBase={inBase} leftBase={zone.LeftBase} combat={inCombat} " +
                          $"suppressed={suppressed}");
@@ -106,8 +114,11 @@ namespace FoodGuard
             // can't stack back-to-back (center-screen banners overwrite each other -- without the spacer
             // only the last would be readable). Only ONE popup fires per tick; the first eligible wins.
 
-            // ---- #3 COMBAT + low food (highest priority; never suppressed by base) ----
-            if (Plugin.CombatEnabled.Value && inCombat && needsFoodConfirmed &&
+            // ---- #3 COMBAT + too few foods (highest priority; never suppressed by base) ----
+            // Fires when in combat AND the number of empty food slots >= CombatMinEmptySlots (default 2).
+            // (Previously: in combat AND any food under threshold. Changed because the urgent combat
+            // case is having 1 or 0 foods eaten, not merely a food running low.)
+            if (Plugin.CombatEnabled.Value && inCombat && combatEmptySlotsConfirmed &&
                 CooldownElapsed(now, _lastCombat, Plugin.CombatCooldown.Value) &&
                 TryFire(now, Plugin.CombatMessage.Value, nameof(_lastCombat)))
             {
@@ -228,6 +239,7 @@ namespace FoodGuard
             _needsFoodStreak = 0;
             _noFoodStreak = 0;
             _notRestedStreak = 0;
+            _combatEmptySlotsStreak = 0;
             _alertSfxPrefab = null;
             _alertSfxResolved = false;
             LocalCombatScanner.Reset();

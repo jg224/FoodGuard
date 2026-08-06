@@ -47,6 +47,7 @@ namespace FoodGuard
             public bool HasNoFood;          // every slot empty (nothing eaten at all)
             public int LowestRemainingPct;  // 0-100, lowest remaining% among active foods; 0 if none active
             public int ActiveFoodCount;     // number of slots currently holding a readable food item
+            public int EmptyFoodSlots;      // number of empty/expired slots (= m_maxFoods - ActiveFoodCount)
         }
 
         /// <summary>Reads the local player's foods and returns the verdict. Safe if m_foods can't be read.</summary>
@@ -102,6 +103,12 @@ namespace FoodGuard
             state.HasNoFood = !anyActiveFood;
             state.NeedsFood = anyLow || (Plugin.EmptySlotCountsAsLow.Value && !anyActiveFood);
             state.ActiveFoodCount = activeCount;
+            // Empty slots = list capacity minus active. The m_foods list length IS the slot capacity
+            // (Valheim keeps it at Player.m_maxFoods = 3); an empty/expired slot stays in the list as
+            // a null or unreadable entry. So empty = list.Count - activeCount.
+            int capacity = foods.Count;
+            if (capacity < activeCount) capacity = activeCount;   // defensive: never report negative
+            state.EmptyFoodSlots = capacity - activeCount;
             state.LowestRemainingPct = anyActiveFood
                 ? Mathf.RoundToInt(lowestFraction * 100f)
                 : 0;
