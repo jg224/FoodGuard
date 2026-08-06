@@ -37,6 +37,14 @@ namespace FoodGuard
             sb.Append(" | rested=").Append(RestStatusChecker.IsRested(local) ? "yes" : "NO");
             sb.Append(" | combat=").Append(inCombat ? "yes" : "no");
             sb.Append(" port=").Append(transitioning ? "yes" : "no");
+            // Login/spawn grace: how long since the player entered the world. If under LoginGraceSeconds,
+            // all triggers are suppressed (gives time to load in + mark a base).
+            if (SpawnTracker.LastSpawnTime.HasValue)
+            {
+                float sinceSpawn = UnityEngine.Time.realtimeSinceStartup - SpawnTracker.LastSpawnTime.Value;
+                sb.Append(" tLogin=").Append(sinceSpawn.ToString("F0")).Append("s");
+                if (sinceSpawn < Plugin.LoginGraceSeconds.Value) sb.Append(" LOGIN-GRACE");
+            }
             // Death signal: Character.IsDead() is a stripped stub in this build, so we use
             // m_timeSinceDeath -- if it's small, we died recently. Grace window matches the engine.
             float? tsd = GetTimeSinceDeath(local);

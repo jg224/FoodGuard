@@ -57,6 +57,7 @@ namespace FoodGuard
         internal static ConfigEntry<float> PollInterval;           // seconds between evaluation passes
         internal static ConfigEntry<float> PostEatGraceSeconds;    // suppress reminders for N s after eating
         internal static ConfigEntry<float> RespawnGraceSeconds;    // suppress reminders for N s after death/respawn
+        internal static ConfigEntry<float> LoginGraceSeconds;      // suppress reminders for N s after login/spawn
         internal static ConfigEntry<KeyCode> DebugHotkey;          // press to dump live state to screen
 
         // ---- Base zone ----
@@ -132,6 +133,12 @@ namespace FoodGuard
                 "you the moment you respawn, before you've had a chance to loot your body and eat. " +
                 "Measured from the moment of death. 60s is usually enough to get reoriented; raise it " +
                 "if you want more breathing room after a death.");
+
+            LoginGraceSeconds = Config.Bind("General", "LoginGraceSeconds", 20f,
+                "After you log in / spawn into the world, suppress ALL reminders (including the 'mark your " +
+                "base' nudge) for this many seconds. Gives you time to load in, get oriented, and -- if you " +
+                "haven't yet -- mark your base with F7 before any popups appear. Fires on both initial login " +
+                "and post-respawn. Set 0 to disable the grace entirely.");
 
             DebugHotkey = Config.Bind("General", "DebugHotkey", KeyCode.F8,
                 "Press this key in-game to dump the live food/base/combat state the mod sees as a " +
@@ -261,6 +268,19 @@ namespace FoodGuard
                 Log.LogInfo($"[hint] BaseZoneMode is '{initialMode}' (carried from an earlier FoodGuard build). " +
                             $"Set it to 'Marked' and press F7 at your base for strict per-base detection " +
                             $"(farms/outposts won't count). Current mode treats any matching area as base.");
+            }
+
+            // Apply Harmony patches (SpawnTracker.OnSpawnedPatch, etc.). Wrapped so a patch failure
+            // can't keep the whole mod from loading -- the spawn tracker has a fallback path.
+            try
+            {
+                var harmony = new HarmonyLib.Harmony(PluginGuid);
+                harmony.PatchAll();
+                Log.LogInfo("Harmony patches applied.");
+            }
+            catch (System.Exception e)
+            {
+                Log.LogWarning($"Harmony patchall failed (non-fatal; spawn-time tracking falls back): {e.Message}");
             }
         }
 
@@ -410,12 +430,19 @@ namespace FoodGuard
             }
             _lastFoodCount = food.ActiveFoodCount;
 
-            bool suppressed = now < _suppressUntil || deathGraceActive;
+            // LOGIN GRACE: for the first LoginGraceSeconds after login/respawn, suppress all reminders
+            // (including the unmarked-base nudge). Gives the player time to load in and mark a base.
+            // EnsureSpawnTime is a fallback in case the OnSpawned Harmony patch didn't fire.
+            SpawnTracker.EnsureSpawnTime();
+            bool loginGraceActive = SpawnTracker.IsWithinLoginGrace;
+
+            bool suppressed = now < _suppressUntil || deathGraceActive || loginGraceActive;
 
             // Unmarked-base reminder: if the user is on Marked mode but hasn't pressed F7 yet (no center
             // set), nothing counts as base -- the low-food nudge won't be suppressed at home. Periodically
             // remind them to mark it, until they do. Uses its own cooldown and respects the global popup
-            // spacer + the same suppression windows as the other triggers.
+            // spacer + the same suppression windows as the other triggers. Suppressed during login grace
+            // so it can't fire before the player has had a chance to mark.
             if (RemindIfUnmarked.Value && !suppressed && IsMarkedModeWithoutMark())
             {
                 ReminderEngine.TryUnmarkedReminder(now);
