@@ -4,14 +4,16 @@ using UnityEngine;
 namespace FoodGuard
 {
     /// <summary>
-    ///   On-demand diagnostic dump, triggered by the DebugHotkey (default F8). Shows the EXACT state
-    ///   the mod sees right now -- food slots with their remaining %, base-zone verdict, combat flag,
-    ///   cooldowns -- both as a center-screen popup and a BepInEx log line.
+    ///   On-demand diagnostic dumps, triggered by hotkeys:
+    ///     F8 (DebugHotkey)        -- live food/base/combat state, to screen + log
+    ///     F9 (SfxDumpHotkey)      -- every sfx_*/vfx_* prefab name the game has loaded, to log only
     ///
-    ///   WHY THIS EXISTS
-    ///   Field reports of "it fired when it shouldn't" or "it didn't fire when it should" are hard to
-    ///   reproduce blind. Press F8 at the moment the behavior happens (e.g. while sailing with low food)
-    ///   and the dump says precisely what the mod read, so the cause is obvious without guessing.
+    ///   WHY THESE EXIST
+    ///   F8: field reports of "it fired when it shouldn't" are hard to reproduce blind. Press it at the
+    ///       moment the behavior happens and the dump says precisely what the mod read.
+    ///   F9: the AlertSfxName config needs a valid prefab name, and those live in asset bundles (NOT in
+    ///       assembly_valheim.dll -- a Cecil dump finds zero sfx_ literals). This lists the names your
+    ///       actual game has loaded, so any value you pick is guaranteed to resolve via ZNetScene.
     /// </summary>
     internal static class Diagnostics
     {
@@ -71,6 +73,46 @@ namespace FoodGuard
                                $"mark='{Plugin.MarkedBaseCenter.Value}' radius={Plugin.MarkedBaseRadius.Value} " +
                                $"you=({p.x:F1},{p.y:F1},{p.z:F1}) base={(zone.IsInBase ? "IN" : "out")} " +
                                $"dist={(zone.DistanceToBase >= 0 ? zone.DistanceToBase.ToString("F1") : "n/a")}m");
+        }
+
+        /// <summary>
+        ///   Dumps every sfx_* and vfx_* prefab name the game currently has loaded to the BepInEx log.
+        ///   Triggered by SfxDumpHotkey (F9). Used to find a valid AlertSfxName -- any name in the dump
+        ///   is guaranteed to resolve via ZNetScene.GetPrefab on your exact game version.
+        ///   Source: ZNetScene.m_prefabs (public List&lt;GameObject&gt;), filtered by name prefix.
+        /// </summary>
+        public static void DumpSfxList()
+        {
+            ZNetScene znet = ZNetScene.instance;
+            if (znet == null)
+            {
+                Plugin.Log.LogInfo("[FoodGuard] SFX dump: ZNetScene not ready (not in-world yet).");
+                ShowPopup("[FoodGuard] SFX dump: not in-world yet");
+                return;
+            }
+
+            // m_prefabs is a public List<GameObject> of every registered prefab. Iterate + filter.
+            var sfx = new System.Collections.Generic.List<string>();
+            var vfx = new System.Collections.Generic.List<string>();
+            foreach (GameObject prefab in znet.m_prefabs)
+            {
+                if (prefab == null) continue;
+                string n = prefab.name;
+                if (n == null) continue;
+                if (n.StartsWith("sfx_")) sfx.Add(n);
+                else if (n.StartsWith("vfx_")) vfx.Add(n);
+            }
+            sfx.Sort(System.StringComparer.Ordinal);
+            vfx.Sort(System.StringComparer.Ordinal);
+
+            Plugin.Log.LogInfo($"[FoodGuard] === SFX dump ({sfx.Count} sfx_*, {vfx.Count} vfx_*) ===");
+            Plugin.Log.LogInfo("[FoodGuard] --- sfx_* (sounds) ---  any of these works as AlertSfxName:");
+            foreach (string n in sfx) Plugin.Log.LogInfo($"  {n}");
+            Plugin.Log.LogInfo("[FoodGuard] --- vfx_* (visual effects) ---  (not useful as sounds, listed for reference)");
+            foreach (string n in vfx) Plugin.Log.LogInfo($"  {n}");
+            Plugin.Log.LogInfo($"[FoodGuard] === end SFX dump ===");
+
+            ShowPopup($"[FoodGuard] {sfx.Count} sfx_* + {vfx.Count} vfx_* names written to log.");
         }
 
         private static string PerSlotBreakdown(Player local)

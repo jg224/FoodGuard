@@ -129,10 +129,14 @@ Alternatives if you prefer them (set `BaseZoneMode`):
 ## Hotkeys
 
 - **F7** — mark your main base at your current position (saved to config). Re-mark to move it.
-- **F8** — dump the live state the mod sees (food %, base in/out + distance, combat, teleport) to the
-  screen and the BepInEx log. Use it to diagnose any "why did/didn't it fire" moment.
+- **F8** — dump the live state the mod sees (food %, base in/out + distance, rested, combat, teleport,
+  login/death timers) to the screen and the BepInEx log. Use it to diagnose any "why did/didn't it
+  fire" moment.
+- **F9** — dump every `sfx_*` (and `vfx_*`) prefab name your game has loaded to the BepInEx log. Use it
+  to find a valid value for `AlertSfxName` — any name in the dump is guaranteed to work on your game
+  version. Goes to the log only (there are hundreds), so check the BepInEx log after pressing.
 
-Both are rebindable (`MarkBaseHotkey`, `DebugHotkey`); set to `None` to disable.
+All three are rebindable (`MarkBaseHotkey`, `DebugHotkey`, `SfxDumpHotkey`); set to `None` to disable.
 
 ## Notes
 
