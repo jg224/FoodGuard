@@ -129,14 +129,8 @@ Alternatives if you prefer them (set `BaseZoneMode`):
 ## Hotkeys
 
 - **F7** — mark your main base at your current position (saved to config). Re-mark to move it.
-- **F8** — dump the live state the mod sees (food %, base in/out + distance, rested, combat, teleport,
-  login/death timers) to the screen and the BepInEx log. Use it to diagnose any "why did/didn't it
-  fire" moment.
-- **F9** — dump every `sfx_*` (and `vfx_*`) prefab name your game has loaded to the BepInEx log. Use it
-  to find a valid value for `AlertSfxName` — any name in the dump is guaranteed to work on your game
-  version. Goes to the log only (there are hundreds), so check the BepInEx log after pressing.
 
-All three are rebindable (`MarkBaseHotkey`, `DebugHotkey`, `SfxDumpHotkey`); set to `None` to disable.
+Rebindable (`MarkBaseHotkey`); set to `None` to disable.
 
 ## Notes
 
@@ -146,7 +140,6 @@ All three are rebindable (`MarkBaseHotkey`, `DebugHotkey`, `SfxDumpHotkey`); set
   the signal doesn't flicker off during retargeting.
 - **The alert sound** is resolved from Valheim's prefab table by name (`sfx_perfectblock` by default —
   the sharp metallic perfect-block ring). If that prefab is missing or has no audio clip, the sound is
-  skipped silently — the popup still shows. Change `AlertSfxName` to any other networked SFX prefab
-  (press F9 to list them); see the Sound section of the config for the full list of options.
+  skipped silently — the popup still shows. Change `AlertSfxName` to any other networked SFX prefab.
 - **No bundled game DLLs.** The build references the game/BepInEx DLLs already on the machine
   (`Private=false`), matching the project's other custom mods.

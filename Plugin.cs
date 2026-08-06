@@ -58,8 +58,6 @@ namespace FoodGuard
         internal static ConfigEntry<float> PostEatGraceSeconds;    // suppress reminders for N s after eating
         internal static ConfigEntry<float> RespawnGraceSeconds;    // suppress reminders for N s after death/respawn
         internal static ConfigEntry<float> LoginGraceSeconds;      // suppress reminders for N s after login/spawn
-        internal static ConfigEntry<KeyCode> DebugHotkey;          // press to dump live state to screen
-        internal static ConfigEntry<KeyCode> SfxDumpHotkey;        // press to dump all sfx_* prefab names to log
 
         // ---- Base zone ----
         internal static ConfigEntry<string> BaseZoneMode;          // Marked | CraftingStation | Building | Both
@@ -141,17 +139,6 @@ namespace FoodGuard
                 "haven't yet -- mark your base with F7 before any popups appear. Fires on both initial login " +
                 "and post-respawn. Set 0 to disable the grace entirely.");
 
-            DebugHotkey = Config.Bind("General", "DebugHotkey", KeyCode.F8,
-                "Press this key in-game to dump the live food/base/combat state the mod sees as a " +
-                "center-screen popup + BepInEx log line. Use it to diagnose 'why didn't it fire' or " +
-                "'why did it fire' moments. Set to KeyCode.None to disable.");
-
-            SfxDumpHotkey = Config.Bind("General", "SfxDumpHotkey", KeyCode.F9,
-                "Press this key in-game to dump every sfx_* (and vfx_*) prefab name your game has " +
-                "loaded to the BepInEx log. Use it to find a valid AlertSfxName for the combat alert " +
-                "sound -- any name in the dump is guaranteed to work. Names go to the log only (not the " +
-                "screen, since there are hundreds). Set to KeyCode.None to disable.");
-
             BaseZoneMode = Config.Bind("Base", "BaseZoneMode", "Marked",
                 "What counts as 'base' for the quiet zone and the leave-base trigger. " +
                 "Marked (default, recommended) = a single location YOU mark with the MarkBaseHotkey. " +
@@ -221,7 +208,7 @@ namespace FoodGuard
                 "Valheim prefab name of the alert sound effect. Resolved via ZNetScene.GetPrefab. " +
                 "Must be a networked prefab that contains an AudioSource. Default sfx_perfectblock = the " +
                 "sharp metallic perfect-block ring. If it can't be found, the sound is skipped silently " +
-                "(the popup still shows). Press F9 to dump every valid sound name to the log.");
+                "(the popup still shows).");
 
             LeaveBaseCooldown = Config.Bind("Cooldowns", "LeaveBaseCooldown", 30f,
                 "Seconds between repeated leave-base popups (the trigger also rearms on re-enter).");
@@ -304,10 +291,6 @@ namespace FoodGuard
         // player just ate something -> arm the grace window.
         private static int _lastFoodCount = -1;
 
-        // Debug-hotkey latch so holding the key doesn't re-fire every frame.
-        private static bool _debugKeyDown;
-        // SFX-dump hotkey latch.
-        private static bool _sfxDumpKeyDown;
         // Mark-base hotkey latch.
         private static bool _markKeyDown;
 
@@ -337,39 +320,6 @@ namespace FoodGuard
             if (!Enabled.Value) return;
             Player local = Player.m_localPlayer;
             if (local == null) return;          // not in-game / server-side
-
-            // On-demand debug hotkey: edge-triggered, dumps live state. Runs every frame so it's
-            // responsive, but the latch makes it fire once per press.
-            if (DebugHotkey.Value != KeyCode.None)
-            {
-                bool down = Input.GetKeyDown(DebugHotkey.Value);
-                if (down && !_debugKeyDown)
-                {
-                    _debugKeyDown = true;
-                    Diagnostics.DumpState(local);
-                }
-                else if (!down)
-                {
-                    _debugKeyDown = false;
-                }
-            }
-
-            // SFX dump hotkey: lists every sfx_*/vfx_* prefab the game has loaded, to the log. Used to
-            // discover valid values for AlertSfxName. No local-player dependency beyond ZNetScene being
-            // up, but we still require one to be safe (means the world is loaded).
-            if (SfxDumpHotkey.Value != KeyCode.None)
-            {
-                bool sDown = Input.GetKeyDown(SfxDumpHotkey.Value);
-                if (sDown && !_sfxDumpKeyDown)
-                {
-                    _sfxDumpKeyDown = true;
-                    Diagnostics.DumpSfxList();
-                }
-                else if (!sDown)
-                {
-                    _sfxDumpKeyDown = false;
-                }
-            }
 
             // Mark-base hotkey: save the current position as the base center (persisted to cfg).
             if (MarkBaseHotkey.Value != KeyCode.None)
