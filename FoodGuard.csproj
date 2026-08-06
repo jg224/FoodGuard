@@ -20,6 +20,10 @@
     <FileVersion>0.1.1.0</FileVersion>
     <InformationalVersion>0.1.1</InformationalVersion>
     <Version>0.1.1</Version>
+    <!-- The .NET SDK appends a '+gitHash' source-revision suffix to InformationalVersion by default
+         when it detects a git repo. We want a CLEAN version string (just '0.1.1') in file properties
+         and tooling, so suppress it. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Company>jg224</Company>
     <Authors>jg224</Authors>
     <Product>FoodGuard</Product>
