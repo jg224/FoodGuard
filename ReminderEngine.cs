@@ -265,7 +265,32 @@ namespace FoodGuard
                 Plugin.Debug($"Alert SFX prefab '{Plugin.AlertSfxName.Value}' not found in ZNetScene; sound skipped.");
                 return;
             }
+            PlayPrefabAt(prefab, local);
+        }
 
+        /// <summary>
+        ///   Plays an SFX prefab by NAME at the player. Used by the F10 audition hotkey (and by anything
+        ///   else that wants to play an arbitrary sfx_* on demand). Returns true if a sound played.
+        ///   This is the shared helper; PlayAlertSfx just wraps it with the config prefab cache.
+        /// </summary>
+        public static bool PlaySfxByName(string name, Player local)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            ZNetScene znet = ZNetScene.instance;
+            if (znet == null) return false;
+            GameObject prefab = znet.GetPrefab(name);
+            if (prefab == null)
+            {
+                Plugin.Debug($"PlaySfxByName: '{name}' not found in ZNetScene.");
+                return false;
+            }
+            PlayPrefabAt(prefab, local);
+            return true;
+        }
+
+        // Instantiate the prefab at the player and clean it up after the clip ends.
+        private static void PlayPrefabAt(GameObject prefab, Player local)
+        {
             try
             {
                 // Spawn at the player so a 3D AudioSource attenuates naturally. parent=false so the
@@ -275,7 +300,7 @@ namespace FoodGuard
                 AudioSource src = sfx.GetComponentInChildren<AudioSource>();
                 if (src == null)
                 {
-                    Plugin.Debug($"Alert SFX prefab has no AudioSource; sound skipped.");
+                    Plugin.Debug($"SFX prefab '{prefab.name}' has no AudioSource; sound skipped.");
                     Object.Destroy(sfx);
                     return;
                 }
@@ -287,7 +312,7 @@ namespace FoodGuard
             }
             catch (System.Exception e)
             {
-                Plugin.Debug($"PlayAlertSfx threw (non-fatal): {e.Message}");
+                Plugin.Debug($"PlayPrefabAt threw (non-fatal): {e.Message}");
             }
         }
 
