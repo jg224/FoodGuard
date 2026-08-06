@@ -71,6 +71,19 @@ try {
     $manifestPath = Join-Path $stage 'manifest.json'
     $manifest | ConvertTo-Json -Depth 5 | Set-Content -Path $manifestPath -Encoding UTF8
 
+    # 5. ALSO stage the DLL + LICENSE into ./tcli_dist (flat) so `tcli build` can copy them as a
+    #    folder via thunderstore.toml's [[build.copy]] source = "./tcli_dist". We use a SEPARATE
+    #    folder from ./dist (which holds the zip built in step 6) so tcli doesn't pick up the zip
+    #    and nest it inside the package. tcli 0.2.4 rejects per-file targets but accepts a folder.
+    #    This makes BOTH upload paths work:
+    #      a) tcli publish --file ./dist/FoodGuard-<v>.zip   (the prebuilt zip)
+    #      b) tcli build && tcli publish                      (uses thunderstore.toml + ./tcli_dist)
+    $tcliDist = Join-Path $here 'tcli_dist'
+    if (Test-Path $tcliDist) { Remove-Item $tcliDist -Recurse -Force }
+    New-Item -ItemType Directory -Path $tcliDist -Force | Out-Null
+    Copy-Item $dll                        (Join-Path $tcliDist "$ModName.dll") -Force
+    Copy-Item (Join-Path $here 'LICENSE') (Join-Path $tcliDist 'LICENSE')      -Force
+
     # 5. Zip the staged files at the archive ROOT (no top-level folder).
     $dist = Join-Path $here 'dist'
     $zipPath = Join-Path $dist "$ModName-$Version.zip"

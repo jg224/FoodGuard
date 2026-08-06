@@ -1,0 +1,37 @@
+# Thunderstore CLI (tcli) project configuration.
+# Lets `tcli build` and `tcli publish` locate the icon, readme, and built DLL without a prebuilt zip.
+# Run `make_icon.ps1` (or `publish.ps1`, which calls it) before `tcli build` so icon.png exists.
+
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "jg224"
+name = "FoodGuard"
+versionNumber = "0.1.1"
+description = "A client-side Valheim mod that reminds players to eat. Built for players who forget to eat food & rest, when leaving base or going into combat."
+websiteUrl = "https://github.com/jg224/FoodGuard"
+containsNsfwContent = false
+
+[package.dependencies]
+denikson-BepInExPack_Valheim = "5.4.2333"
+
+[build]
+icon = "./icon.png"
+readme = "./README.md"
+outdir = "./build"
+
+# Copy the staged package contents (DLL + LICENSE) into the package root. We stage into ./tcli_dist
+# (NOT ./dist, which also holds the publish.ps1-built zip) because tcli 0.2.4's [[build.copy]] copies
+# everything in the folder -- if the zip lived there too, it'd end up nested inside the package.
+# publish.ps1 populates ./tcli_dist first.
+[[build.copy]]
+source = "./tcli_dist"
+target = ""
+
+[publish]
+repository = "https://thunderstore.io"
+communities = [ "valheim", ]
+
+[publish.categories]
+valheim = [ "mods", ]
