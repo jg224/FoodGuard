@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>FoodGuard</AssemblyName>
+    <RootNamespace>FoodGuard</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Don't ship any of the game/dependency DLLs; they already live in the BepInEx tree. -->
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <!-- The game runs Mono/CLR 4.x; pin C# to a level it understands. -->
+    <NoWarn>CS0436</NoWarn>
+
+    <!-- Assembly metadata. The .NET SDK turns these into [assembly: AssemblyVersion],
+         [assembly: AssemblyCompany], etc. so the DLL self-describes its author/version everywhere
+         it is inspected (Windows file Properties, BepInEx console, ConfigurationManager, Thunderstore
+         tooling). Keep Version here in sync with Plugin.PluginVersion. Company/Authors = the author
+         r2modman and Thunderstore attribute the package to. -->
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <InformationalVersion>0.1.0</InformationalVersion>
+    <Version>0.1.0</Version>
+    <Company>jg224</Company>
+    <Authors>jg224</Authors>
+    <Product>FoodGuard</Product>
+    <Copyright>Copyright (c) 2026 jg224</Copyright>
+    <Description>Client-side food-reminder mod for Valheim. Shows a center-screen popup (and an optional combat alert sound) when food is low, when leaving base, or when entering combat without food.</Description>
+    <!-- MIT licensed; the SPDX expression surfaces the license to tooling that reads it. -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+    <!-- All references are local DLLs already present on this machine (the server install tree
+         is used as the reference source; the same DLLs ship in the client install). None are
+         copied to output. -->
+  <PropertyGroup>
+    <RestoreAdditionalProjectSources></RestoreAdditionalProjectSources>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BepInEx + Harmony (mod host + patching). Harmony is referenced for AccessTools reflection
+         of private game fields (Player.m_foods, Character.m_baseAI); same pattern as sleepguard. -->
+    <Reference Include="BepInEx">
+      <HintPath>C:\ValheimServer\server\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>C:\ValheimServer\server\BepInEx\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Valheim + Unity engine. Same paths the other custom mods in this project reference. -->
+    <Reference Include="assembly_valheim">
+      <HintPath>C:\ValheimServer\server\valheim_server_Data\Managed\assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>C:\ValheimServer\server\valheim_server_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\ValheimServer\server\valheim_server_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>C:\ValheimServer\server\valheim_server_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>C:\ValheimServer\server\valheim_server_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
