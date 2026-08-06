@@ -63,7 +63,7 @@ try {
         name        = $ModName.ToLower()
         version_number = $Version
         website_url = "https://github.com/$Author/$ModName"
-        description = "Client-side food-reminder mod for Valheim. Center-screen popups (and an optional combat alert sound) when food is low, when leaving base, when entering combat without food, or when entering combat without the Rested buff. Mark your base with F7. Configurable."
+        description = "Client-side Valheim mod that reminds forgetful players to eat. Center-screen popups + alert sound when food is low, leaving base, or entering combat without food or Rested. Mark your base with F7. Configurable."
         dependencies = @(
             "denikson-BepInExPack_Valheim-5.4.2333"
         )

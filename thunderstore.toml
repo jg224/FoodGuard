@@ -9,7 +9,7 @@ schemaVersion = "0.0.1"
 namespace = "jg224"
 name = "FoodGuard"
 versionNumber = "0.1.1"
-description = "A client-side Valheim mod that reminds players to eat. Built for players who forget to eat food & rest, when leaving base or going into combat."
+description = "Client-side Valheim mod that reminds forgetful players to eat. Center-screen popups + alert sound when food is low, leaving base, or entering combat without food or Rested. Mark your base with F7. Configurable."
 websiteUrl = "https://github.com/jg224/FoodGuard"
 containsNsfwContent = false
 
